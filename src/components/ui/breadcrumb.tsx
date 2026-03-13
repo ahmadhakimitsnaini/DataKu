@@ -4,6 +4,7 @@ import { ChevronRight, MoreHorizontal } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+// Breadcrumb: Komponen navigasi utama (nav) dengan label aksesibilitas
 const Breadcrumb = React.forwardRef<
   HTMLElement,
   React.ComponentPropsWithoutRef<"nav"> & {
@@ -12,6 +13,7 @@ const Breadcrumb = React.forwardRef<
 >(({ ...props }, ref) => <nav ref={ref} aria-label="breadcrumb" {...props} />);
 Breadcrumb.displayName = "Breadcrumb";
 
+// BreadcrumbList: Kontainer daftar (ol) untuk menampung item navigasi
 const BreadcrumbList = React.forwardRef<HTMLOListElement, React.ComponentPropsWithoutRef<"ol">>(
   ({ className, ...props }, ref) => (
     <ol
@@ -26,6 +28,7 @@ const BreadcrumbList = React.forwardRef<HTMLOListElement, React.ComponentPropsWi
 );
 BreadcrumbList.displayName = "BreadcrumbList";
 
+// BreadcrumbItem: Pembungkus untuk setiap elemen dalam list (li)
 const BreadcrumbItem = React.forwardRef<HTMLLIElement, React.ComponentPropsWithoutRef<"li">>(
   ({ className, ...props }, ref) => (
     <li ref={ref} className={cn("inline-flex items-center gap-1.5", className)} {...props} />
@@ -33,6 +36,7 @@ const BreadcrumbItem = React.forwardRef<HTMLLIElement, React.ComponentPropsWitho
 );
 BreadcrumbItem.displayName = "BreadcrumbItem";
 
+// BreadcrumbLink: Link navigasi (a), mendukung 'asChild' untuk integrasi Next.js Link
 const BreadcrumbLink = React.forwardRef<
   HTMLAnchorElement,
   React.ComponentPropsWithoutRef<"a"> & {
@@ -45,6 +49,7 @@ const BreadcrumbLink = React.forwardRef<
 });
 BreadcrumbLink.displayName = "BreadcrumbLink";
 
+// BreadcrumbPage: Menampilkan halaman aktif saat ini (tidak bisa diklik)
 const BreadcrumbPage = React.forwardRef<HTMLSpanElement, React.ComponentPropsWithoutRef<"span">>(
   ({ className, ...props }, ref) => (
     <span
@@ -59,6 +64,7 @@ const BreadcrumbPage = React.forwardRef<HTMLSpanElement, React.ComponentPropsWit
 );
 BreadcrumbPage.displayName = "BreadcrumbPage";
 
+// BreadcrumbSeparator: Elemen pemisah antar item (default: ChevronRight)
 const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentProps<"li">) => (
   <li role="presentation" aria-hidden="true" className={cn("[&>svg]:size-3.5", className)} {...props}>
     {children ?? <ChevronRight />}
@@ -66,6 +72,7 @@ const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentP
 );
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator";
 
+// BreadcrumbEllipsis: Simbol tiga titik untuk navigasi yang terlalu panjang
 const BreadcrumbEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => (
   <span
     role="presentation"
