@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Brain, ArrowRight, TableProperties, AlertCircle } from "lucide-react";
+import { Brain, ArrowRight, TableProperties, AlertCircle, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 
 export default function ProjectDetail() {
@@ -33,6 +41,16 @@ export default function ProjectDetail() {
     { type: 'Numerical', count: 4, fill: '#8884d8' },
     { type: 'Categorical', count: 14, fill: '#82ca9d' },
     { type: 'Boolean', count: 1, fill: '#ffc658' },
+  ];
+
+  // Mock data untuk Pratinjau Dataset (Dataset Preview)
+  const previewHeaders = ["customer_id", "gender", "SeniorCitizen", "Partner", "Dependents", "tenure", "PhoneService", "MultipleLines", "InternetService", "TotalCharges", "Churn"];
+  const previewData = [
+    { id: "7590-VHVEG", gender: "Female", senior: "0", partner: "Yes", dep: "No", tenure: "1", phone: "No", lines: "No phone service", internet: "DSL", total: "29.85", churn: "No" },
+    { id: "5575-GNVDE", gender: "Male", senior: "0", partner: "No", dep: "No", tenure: "34", phone: "Yes", lines: "No", internet: "DSL", total: "1889.5", churn: "No" },
+    { id: "3668-QPYBK", gender: "Male", senior: "0", partner: "No", dep: "No", tenure: "2", phone: "Yes", lines: "No", internet: "DSL", total: "108.15", churn: "Yes" },
+    { id: "7795-CFOCW", gender: "Male", senior: "0", partner: "No", dep: "No", tenure: "45", phone: "No", lines: "No phone service", internet: "DSL", total: "1840.75", churn: "No" },
+    { id: "9237-HQITU", gender: "Female", senior: "0", partner: "No", dep: "No", tenure: "2", phone: "Yes", lines: "No", internet: "Fiber optic", total: "151.65", churn: "Yes" },
   ];
 
   return (
@@ -161,6 +179,44 @@ export default function ProjectDetail() {
             
             <div className="mt-8 bg-primary/10 border border-primary/20 rounded-lg p-4 text-sm text-primary">
               <p>The system will automatically convert strings to categorical variables and normalize numeric data during training.</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Dataset Preview Table Area */}
+        <div className="mt-6 glass rounded-xl p-6 shadow-sm border border-border">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold flex items-center gap-2">
+              <FileSpreadsheet className="w-5 h-5 text-primary" /> 
+              Dataset Preview
+            </h3>
+            <span className="text-sm text-muted-foreground">Showing top 5 rows</span>
+          </div>
+          
+          <div className="rounded-md border border-border overflow-hidden">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-secondary/50">
+                  <TableRow>
+                    {previewHeaders.map((header) => (
+                      <TableHead key={header} className="font-mono text-xs whitespace-nowrap">
+                        {header}
+                      </TableHead>
+                    ))}
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {previewData.map((row, index) => (
+                    <TableRow key={index}>
+                      {Object.values(row).map((cell, cellIndex) => (
+                        <TableCell key={cellIndex} className="text-sm whitespace-nowrap">
+                          {cell}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           </div>
         </div>
