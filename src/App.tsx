@@ -5,6 +5,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
+import ProjectDetail from "./pages/ProjectDetail";
+import JobConfig from "./pages/JobConfig";
+import Leaderboard from "./pages/Leaderboard";
 import NotFound from "./pages/NotFound";
 
 /**
@@ -41,8 +44,10 @@ const App = () => (
           {/* Rute Halaman Utama (Landing Page) */}
           <Route path="/" element={<Index />} />
           
-          {/* Rute Halaman Dashboard Utama */}
           <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/project/:id" element={<ProjectDetail />} />
+          <Route path="/project/:id/train" element={<JobConfig />} />
+          <Route path="/project/:id/models" element={<Leaderboard />} />
           
           {/* Rute Wildcard (*) untuk menangani URL yang tidak terdaftar (404 Error) */}
           <Route path="*" element={<NotFound />} />

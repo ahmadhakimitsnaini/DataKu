@@ -1,12 +1,12 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Brain, Upload, Plus, BarChart3, Clock, CheckCircle2,
-  AlertCircle, ChevronRight, Cpu, FileSpreadsheet, Trash2,
-  Play, ExternalLink, Activity
+  Brain, Plus, Clock, CheckCircle2,
+  AlertCircle, ChevronRight, Activity, ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { UploadModal } from "@/components/UploadModal";
 
 // 1. Tipe data dan Data Palsu (Mock Data) untuk preview UI
 interface Project {
@@ -67,48 +67,10 @@ const statusConfig = {
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   // 3. State Management untuk menyimpan data UI
   const [projects] = useState<Project[]>(mockProjects);
   const [showUpload, setShowUpload] = useState(false); // Menampilkan modal upload
-  const [dragOver, setDragOver] = useState(false); // Efek saat file di-drag ke area upload
-  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
-  const [columns, setColumns] = useState<string[]>([]); // Daftar kolom dari CSV
-  const [selectedTarget, setSelectedTarget] = useState(""); // Kolom target yang dipilih user
-
-  // 4. Fungsi untuk menangani drag & drop file
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    // Pastikan file yang diupload hanya format CSV
-    if (file?.name.endsWith(".csv")) {
-      simulateUpload(file.name);
-    }
-  }, []);
-
-  // 5. Fungsi untuk menangani file yang dipilih lewat klik folder
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file?.name.endsWith(".csv")) {
-      simulateUpload(file.name);
-    }
-  }, []);
-
-  // 6. Fungsi simulasi membaca file CSV (Mendapatkan daftar kolom)
-  const simulateUpload = (name: string) => {
-    setUploadedFile(name);
-    // Dummy kolom yang seolah-olah dibaca dari file CSV
-    setColumns(["age", "income", "gender", "region", "purchase_amount", "is_churned"]);
-    setSelectedTarget("");
-  };
-
-  // 7. Fungsi untuk menutup modal dan mereset form upload
-  const resetUpload = () => {
-    setShowUpload(false);
-    setUploadedFile(null);
-    setColumns([]);
-    setSelectedTarget("");
-  };
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -142,112 +104,7 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        {/* --- MODAL UPLOAD FILE --- */}
-        <AnimatePresence>
-          {showUpload && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
-              // Tutup modal jika user klik area di luar modal
-              onClick={(e) => e.target === e.currentTarget && resetUpload()}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="glass rounded-2xl p-8 w-full max-w-lg"
-              >
-                <h2 className="text-xl font-bold mb-1">New Project</h2>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Upload a CSV dataset to get started
-                </p>
-
-                {/* Tampilan jika belum ada file yang diupload (Area Drag & Drop) */}
-                {!uploadedFile ? (
-                  <div
-                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={handleDrop}
-                    className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer ${
-                      dragOver
-                        ? "border-primary bg-primary/5" // Warna saat file ditarik ke area ini
-                        : "border-border hover:border-muted-foreground"
-                    }`}
-                    onClick={() => document.getElementById("csv-input")?.click()}
-                  >
-                    <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-sm font-medium mb-1">Drag & drop your CSV file here</p>
-                    <p className="text-xs text-muted-foreground">or click to browse</p>
-                    {/* Input file disembunyikan, di-trigger lewat klik div di atas */}
-                    <input
-                      id="csv-input"
-                      type="file"
-                      accept=".csv"
-                      className="hidden"
-                      onChange={handleFileSelect}
-                    />
-                  </div>
-                ) : (
-                  /* Tampilan jika file berhasil diupload (Pilih Target Kolom) */
-                  <div className="space-y-5">
-                    {/* Informasi File */}
-                    <div className="flex items-center gap-3 bg-secondary rounded-lg p-4">
-                      <FileSpreadsheet className="w-8 h-8 text-primary shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{uploadedFile}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {columns.length} columns detected
-                        </p>
-                      </div>
-                      {/* Tombol hapus file */}
-                      <button onClick={() => { setUploadedFile(null); setColumns([]); }} className="text-muted-foreground hover:text-foreground">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Area Pilihan Target Kolom */}
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        Select Target Column
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {columns.map((col) => (
-                          <button
-                            key={col}
-                            onClick={() => setSelectedTarget(col)}
-                            className={`px-3 py-2 rounded-lg text-sm font-mono text-left transition-colors ${
-                              selectedTarget === col
-                                ? "bg-primary/20 border border-primary text-primary" // Warna jika terpilih
-                                : "bg-secondary border border-transparent hover:border-border"
-                            }`}
-                          >
-                            {col}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Tombol Aksi Form */}
-                    <div className="flex gap-3 pt-2">
-                      <Button variant="outline" className="flex-1" onClick={resetUpload}>
-                        Cancel
-                      </Button>
-                      <Button
-                        className="flex-1 gap-2"
-                        disabled={!selectedTarget} // Tombol mati jika kolom belum dipilih
-                        onClick={resetUpload}
-                      >
-                        <Play className="w-4 h-4" /> Train Model
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <UploadModal isOpen={showUpload} onClose={() => setShowUpload(false)} />
 
         {/* --- DAFTAR PROYEK (GRID) --- */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -261,8 +118,9 @@ export default function Dashboard() {
                 key={project.id}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.08 }} // Animasi muncul bergantian
-                className="glass rounded-xl p-6 hover:border-primary/30 transition-colors group cursor-pointer"
+                transition={{ delay: i * 0.08 }}
+                onClick={() => navigate(`/project/${project.id}`)}
+                className="glass rounded-xl p-6 hover:border-primary/30 transition-colors group cursor-pointer flex flex-col h-full"
               >
                 {/* Header Kartu: Status & Ikon Arrow */}
                 <div className="flex items-start justify-between mb-4">
