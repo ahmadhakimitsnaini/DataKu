@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { Brain, ArrowRight, BarChart3, Database } from "lucide-react";
+import { Brain, ArrowRight, TableProperties, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from "recharts";
 
 export default function ProjectDetail() {
   const { id } = useParams();
@@ -15,6 +16,24 @@ export default function ProjectDetail() {
     missingValues: 11,
     size: "1.2 MB"
   };
+
+  // Mock data untuk Bar Chart Kolom Kosong (Missing Values)
+  const missingDataData = [
+    { column: 'TotalCharges', missing: 11, percentage: 0.15 },
+    { column: 'MultipleLines', missing: 0, percentage: 0 },
+    { column: 'InternetService', missing: 0, percentage: 0 },
+    { column: 'OnlineSecurity', missing: 0, percentage: 0 },
+    { column: 'DeviceProtection', missing: 0, percentage: 0 },
+    { column: 'TechSupport', missing: 0, percentage: 0 },
+    { column: 'StreamingTV', missing: 0, percentage: 0 },
+  ].sort((a, b) => b.missing - a.missing); // Urutkan dari yang terbanyak putus
+
+  // Mock data tipe data fitur
+  const featureTypes = [
+    { type: 'Numerical', count: 4, fill: '#8884d8' },
+    { type: 'Categorical', count: 14, fill: '#82ca9d' },
+    { type: 'Boolean', count: 1, fill: '#ffc658' },
+  ];
 
   return (
     <div className="min-h-screen bg-background relative">
@@ -64,13 +83,86 @@ export default function ProjectDetail() {
           </div>
         </div>
 
-        {/* Dummy Chart Area */}
-        <div className="glass rounded-xl p-8 text-center min-h-[300px] flex flex-col items-center justify-center">
-          <BarChart3 className="w-16 h-16 text-muted-foreground mb-4 opacity-50" />
-          <h3 className="text-lg font-semibold mb-2">Data Distribution</h3>
-          <p className="text-muted-foreground">
-            Distribution charts and pairwise plots will be generated here.
-          </p>
+        {/* Main Chart Area */}
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Missing Values Chart (Takes up 2 columns) */}
+          <div className="glass rounded-xl p-6 lg:col-span-2 shadow-sm border border-border">
+            <div className="flex items-center justify-between mb-6 border-b border-border pb-4">
+              <div>
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 text-warning" /> 
+                  Missing Values Analysis
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Columns with the highest number of null/empty rows.
+                </p>
+              </div>
+            </div>
+            
+            <div className="h-[300px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={missingDataData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.1)" />
+                  <XAxis 
+                    dataKey="column" 
+                    angle={-45} 
+                    textAnchor="end"
+                    interval={0}
+                    tick={{ fontSize: 12, fill: '#888' }}
+                  />
+                  <YAxis tick={{ fontSize: 12, fill: '#888' }} />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                    contentStyle={{ backgroundColor: '#1a1a1a', borderColor: '#333', borderRadius: '8px' }}
+                    itemStyle={{ color: '#fff' }}
+                  />
+                  <Bar dataKey="missing" radius={[4, 4, 0, 0]}>
+                    {missingDataData.map((entry, index) => (
+                      <Cell 
+                        key={`cell-${index}`} 
+                        fill={entry.missing > 0 ? 'hsl(var(--destructive))' : 'hsl(var(--primary))'} 
+                        fillOpacity={entry.missing > 0 ? 0.8 : 0.3}
+                      />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Feature Types Summary */}
+          <div className="glass rounded-xl p-6 shadow-sm border border-border flex flex-col">
+            <h3 className="text-lg font-semibold flex items-center gap-2 border-b border-border pb-4 mb-4">
+              <TableProperties className="w-5 h-5 text-primary" /> Feature Summary
+            </h3>
+            
+            <div className="flex-1 flex flex-col justify-center space-y-6">
+              {featureTypes.map((ft, i) => (
+                <div key={i} className="flex flex-col gap-2">
+                  <div className="flex justify-between items-end text-sm">
+                    <span className="text-muted-foreground font-medium">{ft.type}</span>
+                    <span className="text-xl font-bold font-mono">{ft.count}</span>
+                  </div>
+                  <div className="h-2 w-full bg-secondary rounded-full overflow-hidden">
+                    <div 
+                      className="h-full rounded-full" 
+                      style={{ 
+                        width: `${(ft.count / metadata.columns) * 100}%`,
+                        backgroundColor: ft.fill 
+                      }} 
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-8 bg-primary/10 border border-primary/20 rounded-lg p-4 text-sm text-primary">
+              <p>The system will automatically convert strings to categorical variables and normalize numeric data during training.</p>
+            </div>
+          </div>
         </div>
       </main>
     </div>
