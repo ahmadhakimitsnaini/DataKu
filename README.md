@@ -27,31 +27,75 @@ DataKu adalah platform **AutoML (Automated Machine Learning)** berbasis web yang
 
 ## 🏗️ Arsitektur Sistem
 
-```
-DataKu/
-├── src/                        # Frontend (React + TypeScript + Vite)
-│   ├── pages/
-│   │   ├── Dashboard.tsx       # Halaman utama & upload project
-│   │   ├── ProjectDetail.tsx   # Profiling & preview dataset
-│   │   ├── JobConfig.tsx       # Konfigurasi training (pilih target)
-│   │   └── Leaderboard.tsx     # Hasil & skor model
-│   └── components/
-│       └── UploadModal.tsx     # Komponen upload CSV
-│
-└── backend/                    # Backend (Python + FastAPI)
-    ├── main.py                 # Entry point FastAPI
-    ├── api/
-    │   ├── projects.py         # CRUD project endpoints
-    │   ├── upload.py           # Upload, profiling & preview endpoints
-    │   └── jobs.py             # Training job & model leaderboard endpoints
-    ├── core/
-    │   ├── database.py         # SQLAlchemy database connection
-    │   └── celery_app.py       # Konfigurasi Celery task queue
-    ├── models/
-    │   └── domain.py           # SQLAlchemy ORM models
-    ├── worker/
-    │   └── tasks.py            # Celery AutoML training task
-    └── schemas.py              # Pydantic request/response schemas
+```mermaid
+flowchart TD
+    subgraph FRONTEND["🖥️ Frontend — React + TypeScript"]
+        direction LR
+        A[📊 Dashboard\nUpload CSV]
+        B[🔍 ProjectDetail\nData Profiling]
+        C[⚙️ JobConfig\nPilih Target]
+        D[🏆 Leaderboard\nModel Ranking]
+        A -->|navigate| B --> C --> D
+    end
+
+    subgraph API["⚡ Backend — FastAPI + Uvicorn :8000"]
+        direction LR
+        P[POST /api/projects\nBuat Project]
+        U[POST /api/datasets/upload\nUpload & Profile CSV]
+        PF[GET /api/datasets/:id/profiling\nAmbil Profiling]
+        PV[GET /api/datasets/:id/preview\nPreview Rows]
+        PC[GET /api/projects/:id/columns\nDaftar Kolom]
+        JT[POST /api/jobs/:id/train\nStart Training]
+        JM[GET /api/jobs/:id/models\nLeaderboard]
+    end
+
+    subgraph QUEUE["🔄 Task Queue — Celery + Redis"]
+        R[(📮 Redis Broker\nlocalhost:6379)]
+        W[👷 Celery Worker\ntrain_models_task]
+        R -->|dequeue| W
+    end
+
+    subgraph ML["🤖 ML Engine — Scikit-learn"]
+        direction LR
+        PRE[🧹 Preprocessing\nImputer + Encoder + Scaler]
+        M1[🌲 Random Forest]
+        M2[📈 Logistic Regression]
+        M3[🚀 Gradient Boosting]
+        PRE --> M1 & M2 & M3
+    end
+
+    subgraph STORE["💾 Storage"]
+        DB[(🗄️ SQLite\ndataku.db)]
+        FS[📁 File Storage\n/tmp/dataku_uploads\n/tmp/dataku_models]
+    end
+
+    %% Frontend → API connections
+    A -->|"POST /api/projects"| P
+    A -->|"POST /api/datasets/upload"| U
+    B -->|"GET profiling & preview"| PF & PV
+    C -->|"GET /columns"| PC
+    C -->|"POST /train"| JT
+    D -->|"GET /models"| JM
+
+    %% API → Storage
+    P --> DB
+    U --> DB & FS
+
+    %% API → Queue
+    JT -->|"enqueue task"| R
+
+    %% Worker → ML
+    W --> ML
+
+    %% ML → Storage
+    M1 & M2 & M3 -->|"save .pkl + scores"| DB & FS
+
+    %% Styles
+    style FRONTEND fill:#1a1040,stroke:#7c6aff,color:#fff
+    style API fill:#0a1f30,stroke:#38bdf8,color:#fff
+    style QUEUE fill:#1a1000,stroke:#f97316,color:#fff
+    style ML fill:#1a0020,stroke:#ec4899,color:#fff
+    style STORE fill:#001a10,stroke:#22c55e,color:#fff
 ```
 
 ---
