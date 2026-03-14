@@ -1,0 +1,6 @@
+fastapi==0.115.8
+uvicorn[standard]==0.34.0
+pandas==3.0.1
+scikit-learn==1.8.0
+SQLAlchemy==2.0.48
+python-multipart==0.0.22
