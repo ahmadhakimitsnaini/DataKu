@@ -4,12 +4,16 @@ import * as AlertDialogPrimitive from "@radix-ui/react-alert-dialog";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
+// Root: Komponen utama pembungkus dialog
 const AlertDialog = AlertDialogPrimitive.Root;
 
+// Trigger: Tombol untuk membuka dialog
 const AlertDialogTrigger = AlertDialogPrimitive.Trigger;
 
+// Portal: Memindahkan konten dialog ke layer paling atas DOM
 const AlertDialogPortal = AlertDialogPrimitive.Portal;
 
+// Overlay: Lapisan latar belakang gelap saat dialog terbuka
 const AlertDialogOverlay = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Overlay>
@@ -25,6 +29,7 @@ const AlertDialogOverlay = React.forwardRef<
 ));
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 
+// Content: Konten utama/wadah dialog yang berada di tengah layar
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Content>
@@ -43,16 +48,19 @@ const AlertDialogContent = React.forwardRef<
 ));
 AlertDialogContent.displayName = AlertDialogPrimitive.Content.displayName;
 
+// Header: Bagian atas untuk judul dan deskripsi
 const AlertDialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("flex flex-col space-y-2 text-center sm:text-left", className)} {...props} />
 );
 AlertDialogHeader.displayName = "AlertDialogHeader";
 
+// Footer: Bagian bawah untuk tombol aksi (Cancel/Action)
 const AlertDialogFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)} {...props} />
 );
 AlertDialogFooter.displayName = "AlertDialogFooter";
 
+// Title: Teks judul dialog
 const AlertDialogTitle = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Title>
@@ -61,6 +69,7 @@ const AlertDialogTitle = React.forwardRef<
 ));
 AlertDialogTitle.displayName = AlertDialogPrimitive.Title.displayName;
 
+// Description: Teks penjelasan detail di bawah judul
 const AlertDialogDescription = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Description>
@@ -69,6 +78,7 @@ const AlertDialogDescription = React.forwardRef<
 ));
 AlertDialogDescription.displayName = AlertDialogPrimitive.Description.displayName;
 
+// Action: Tombol konfirmasi utama
 const AlertDialogAction = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Action>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Action>
@@ -77,6 +87,7 @@ const AlertDialogAction = React.forwardRef<
 ));
 AlertDialogAction.displayName = AlertDialogPrimitive.Action.displayName;
 
+// Cancel: Tombol untuk menutup dialog tanpa aksi
 const AlertDialogCancel = React.forwardRef<
   React.ElementRef<typeof AlertDialogPrimitive.Cancel>,
   React.ComponentPropsWithoutRef<typeof AlertDialogPrimitive.Cancel>

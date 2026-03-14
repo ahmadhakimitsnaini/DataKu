@@ -1,14 +1,14 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Brain, Upload, Plus, BarChart3, Clock, CheckCircle2,
-  AlertCircle, ChevronRight, Cpu, FileSpreadsheet, Trash2,
-  Play, ExternalLink, Activity
+  Brain, Plus, Clock, CheckCircle2,
+  AlertCircle, ChevronRight, Activity, ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { UploadModal } from "@/components/UploadModal";
 
-// Mock data
+// 1. Tipe data dan Data Palsu (Mock Data) untuk preview UI
 interface Project {
   id: string;
   name: string;
@@ -58,6 +58,7 @@ const mockProjects: Project[] = [
   },
 ];
 
+// 2. Konfigurasi tema untuk masing-masing status proyek (Warna & Ikon)
 const statusConfig = {
   idle: { color: "text-muted-foreground", bg: "bg-muted", icon: Clock, label: "Idle" },
   training: { color: "text-warning", bg: "bg-warning/10", icon: Activity, label: "Training" },
@@ -66,54 +67,23 @@ const statusConfig = {
 };
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  // 3. State Management untuk menyimpan data UI
   const [projects] = useState<Project[]>(mockProjects);
-  const [showUpload, setShowUpload] = useState(false);
-  const [dragOver, setDragOver] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<string | null>(null);
-  const [columns, setColumns] = useState<string[]>([]);
-  const [selectedTarget, setSelectedTarget] = useState("");
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    if (file?.name.endsWith(".csv")) {
-      simulateUpload(file.name);
-    }
-  }, []);
-
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file?.name.endsWith(".csv")) {
-      simulateUpload(file.name);
-    }
-  }, []);
-
-  const simulateUpload = (name: string) => {
-    setUploadedFile(name);
-    // Simulate parsing CSV headers
-    setColumns(["age", "income", "gender", "region", "purchase_amount", "is_churned"]);
-    setSelectedTarget("");
-  };
-
-  const resetUpload = () => {
-    setShowUpload(false);
-    setUploadedFile(null);
-    setColumns([]);
-    setSelectedTarget("");
-  };
+  const [showUpload, setShowUpload] = useState(false); // Menampilkan modal upload
 
   return (
     <div className="min-h-screen bg-background relative">
       <div className="fixed inset-0 bg-grid opacity-20 pointer-events-none" />
 
-      {/* Nav */}
+      {/* --- BAGIAN NAVIGASI ATAS --- */}
       <nav className="relative z-10 flex items-center justify-between px-6 lg:px-12 py-5 border-b border-border max-w-[1600px] mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <Brain className="w-6 h-6 text-primary" />
           <span className="font-bold tracking-tight">AutoML</span>
         </Link>
         <div className="flex items-center gap-3">
+          {/* Avatar User */}
           <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
             U
           </div>
@@ -121,7 +91,7 @@ export default function Dashboard() {
       </nav>
 
       <main className="relative z-10 max-w-[1600px] mx-auto px-6 lg:px-12 py-8">
-        {/* Header */}
+        {/* --- BAGIAN HEADER & TOMBOL TAMBAH PROYEK --- */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold">Projects</h1>
@@ -134,125 +104,25 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        {/* Upload Modal */}
-        <AnimatePresence>
-          {showUpload && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
-              onClick={(e) => e.target === e.currentTarget && resetUpload()}
-            >
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="glass rounded-2xl p-8 w-full max-w-lg"
-              >
-                <h2 className="text-xl font-bold mb-1">New Project</h2>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Upload a CSV dataset to get started
-                </p>
+        <UploadModal isOpen={showUpload} onClose={() => setShowUpload(false)} />
 
-                {!uploadedFile ? (
-                  <div
-                    onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
-                    onDragLeave={() => setDragOver(false)}
-                    onDrop={handleDrop}
-                    className={`border-2 border-dashed rounded-xl p-12 text-center transition-colors cursor-pointer ${
-                      dragOver
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-muted-foreground"
-                    }`}
-                    onClick={() => document.getElementById("csv-input")?.click()}
-                  >
-                    <Upload className="w-10 h-10 text-muted-foreground mx-auto mb-4" />
-                    <p className="text-sm font-medium mb-1">
-                      Drag & drop your CSV file here
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      or click to browse
-                    </p>
-                    <input
-                      id="csv-input"
-                      type="file"
-                      accept=".csv"
-                      className="hidden"
-                      onChange={handleFileSelect}
-                    />
-                  </div>
-                ) : (
-                  <div className="space-y-5">
-                    {/* File info */}
-                    <div className="flex items-center gap-3 bg-secondary rounded-lg p-4">
-                      <FileSpreadsheet className="w-8 h-8 text-primary shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{uploadedFile}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {columns.length} columns detected
-                        </p>
-                      </div>
-                      <button onClick={() => { setUploadedFile(null); setColumns([]); }} className="text-muted-foreground hover:text-foreground">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Target selector */}
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">
-                        Select Target Column
-                      </label>
-                      <div className="grid grid-cols-2 gap-2">
-                        {columns.map((col) => (
-                          <button
-                            key={col}
-                            onClick={() => setSelectedTarget(col)}
-                            className={`px-3 py-2 rounded-lg text-sm font-mono text-left transition-colors ${
-                              selectedTarget === col
-                                ? "bg-primary/20 border border-primary text-primary"
-                                : "bg-secondary border border-transparent hover:border-border"
-                            }`}
-                          >
-                            {col}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex gap-3 pt-2">
-                      <Button variant="outline" className="flex-1" onClick={resetUpload}>
-                        Cancel
-                      </Button>
-                      <Button
-                        className="flex-1 gap-2"
-                        disabled={!selectedTarget}
-                        onClick={resetUpload}
-                      >
-                        <Play className="w-4 h-4" /> Train Model
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {/* Project Grid */}
+        {/* --- DAFTAR PROYEK (GRID) --- */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {projects.map((project, i) => {
+            // Ambil konfigurasi UI berdasarkan status proyek saat ini
             const status = statusConfig[project.status];
             const StatusIcon = status.icon;
+
             return (
               <motion.div
                 key={project.id}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="glass rounded-xl p-6 hover:border-primary/30 transition-colors group cursor-pointer"
+                onClick={() => navigate(`/project/${project.id}`)}
+                className="glass rounded-xl p-6 hover:border-primary/30 transition-colors group cursor-pointer flex flex-col h-full"
               >
+                {/* Header Kartu: Status & Ikon Arrow */}
                 <div className="flex items-start justify-between mb-4">
                   <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color}`}>
                     <StatusIcon className={`w-3 h-3 ${project.status === "training" ? "animate-pulse" : ""}`} />
@@ -269,16 +139,13 @@ export default function Dashboard() {
                   </p>
                 )}
 
-                {/* Stats row */}
+                {/* Info Baris & Fitur CSV */}
                 <div className="flex gap-4 text-xs text-muted-foreground mb-4">
-                  {project.rows && (
-                    <span>{project.rows.toLocaleString()} rows</span>
-                  )}
-                  {project.features && (
-                    <span>{project.features} features</span>
-                  )}
+                  {project.rows && <span>{project.rows.toLocaleString()} rows</span>}
+                  {project.features && <span>{project.features} features</span>}
                 </div>
 
+                {/* Tampilan Khusus Jika Proyek "Completed" */}
                 {project.status === "completed" && (
                   <div className="border-t border-border pt-4 mt-auto">
                     <div className="flex items-center justify-between">
@@ -301,13 +168,14 @@ export default function Dashboard() {
                   </div>
                 )}
 
+                {/* Tampilan Khusus Jika Proyek "Training" (Progress Bar) */}
                 {project.status === "training" && (
                   <div className="border-t border-border pt-4">
                     <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
                       <motion.div
                         className="h-full bg-primary rounded-full"
                         initial={{ width: "0%" }}
-                        animate={{ width: "65%" }}
+                        animate={{ width: "65%" }} // Simulasi progress berhenti di 65%
                         transition={{ duration: 2, ease: "easeInOut" }}
                       />
                     </div>
@@ -317,6 +185,7 @@ export default function Dashboard() {
                   </div>
                 )}
 
+                {/* Tanggal Pembuatan */}
                 <div className="text-[10px] text-muted-foreground mt-3 font-mono">
                   {project.createdAt}
                 </div>
@@ -324,7 +193,7 @@ export default function Dashboard() {
             );
           })}
 
-          {/* New project card */}
+          {/* Kartu Khusus untuk Membuat Proyek Baru (Ditaruh di akhir list) */}
           <motion.button
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
