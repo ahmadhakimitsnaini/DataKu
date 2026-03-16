@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DataKu — System Architecture</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+    :root {
+      --bg: #0a0a0f;
+      --surface: #111118;
+      --border: rgba(255,255,255,0.08);
+      --primary: #7c6aff;
+      --primary-glow: rgba(124, 106, 255, 0.35);
+      --green: #22c55e;
+      --green-glow: rgba(34, 197, 94, 0.3);
+      --blue: #38bdf8;
+      --blue-glow: rgba(56, 189, 248, 0.3);
+      --orange: #f97316;
+      --orange-glow: rgba(249, 115, 22, 0.3);
+      --pink: #ec4899;
+      --text: #e2e8f0;
+      --muted: #64748b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Animated background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(124,106,255,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(124,106,255,0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    header {
+      position: relative;
+      z-index: 10;
+      padding: 2.5rem 2rem 1.5rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.3rem 0.9rem;
+      background: var(--primary-glow);
+      border: 1px solid var(--primary);
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    header h1 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .arch-wrapper {
+      position: relative;
+      z-index: 10;
+      padding: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Layers */
+    .layer {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .layer-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      padding: 0.25rem 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      margin-bottom: 0.5rem;
+    }
+
+    .nodes-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    /* Node cards */
+    .node {
+      position: relative;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.2rem 1.4rem;
+      min-width: 160px;
+      max-width: 200px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      flex: 1;
+    }
+
+    .node:hover {
+      transform: translateY(-4px);
+      border-color: var(--node-color);
+      box-shadow: 0 8px 32px var(--node-glow), 0 0 0 1px var(--node-color);
+    }
+
+    .node.active {
+      border-color: var(--node-color);
+      box-shadow: 0 8px 40px var(--node-glow), 0 0 0 1px var(--node-color);
+      background: linear-gradient(135deg, var(--surface) 60%, color-mix(in srgb, var(--node-color) 8%, transparent));
+    }
+
+    .node-icon {
+      font-size: 1.6rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .node-title {
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+      color: var(--text);
+    }
+
+    .node-sub {
+      font-size: 0.7rem;
+      color: var(--muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .node-tag {
+      display: inline-block;
+      margin-top: 0.6rem;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: var(--node-glow);
+      color: var(--node-color);
+      border: 1px solid var(--node-color);
+    }
+
+    /* Animated connector arrow */
+    .connector-wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      position: relative;
+    }
+
+    .connector {
+      width: 2px;
+      height: 100%;
+      background: linear-gradient(to bottom, var(--from-color), var(--to-color));
+      position: relative;
+      overflow: hidden;
+    }
+
+    .connector::after {
+      content: '';
+      position: absolute;
+      top: -100%;
+      left: -2px;
+      width: 6px;
+      height: 50%;
+      background: linear-gradient(to bottom, transparent, #fff, transparent);
+      animation: flow 2s linear infinite;
+    }
+
+    @keyframes flow {
+      to { top: 200%; }
+    }
+
+    .connector-arrow {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+      border-top: 8px solid var(--to-color);
+    }
+
+    /* Info Panel */
+    #info-panel {
+      position: fixed;
+      right: 2rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 280px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.5rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+
+    #info-panel.visible {
+      opacity: 1;
+      pointer-events: all;
+      border-color: var(--panel-color);
+      box-shadow: 0 8px 40px color-mix(in srgb, var(--panel-color) 30%, transparent);
+    }
+
+    #info-panel .panel-icon {
+      font-size: 2.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    #info-panel h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    #info-panel .panel-role {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--panel-color, var(--primary));
+      margin-bottom: 1rem;
+    }
+
+    #info-panel p {
+      font-size: 0.8rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .tech-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .tech-chip {
+      font-size: 0.65rem;
+      font-weight: 600;
+      font-family: 'JetBrains Mono', monospace;
+      padding: 0.2rem 0.55rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      color: var(--text);
+    }
+
+    #info-panel .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+    }
+
+    /* Flow legend */
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      padding: 1.5rem 2rem;
+      border-top: 1px solid var(--border);
+      margin-top: 1rem;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.72rem;
+      color: var(--muted);
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* Pulse animation for active nodes */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 16px var(--node-glow); }
+      50% { box-shadow: 0 0 32px var(--node-glow), 0 0 64px var(--node-glow); }
+    }
+
+    .node.pulsing {
+      animation: pulse-glow 2.5s ease-in-out infinite;
+    }
+
+    /* Tooltip hint */
+    .hint {
+      text-align: center;
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="badge">⚡ System Architecture</div>
+  <h1>DataKu AutoML Platform</h1>
+  <p>Click on any component to explore its role in the system.</p>
+</header>
+
+<div class="arch-wrapper">
+
+  <!-- Layer 1: User / Browser -->
+  <div class="layer">
+    <span class="layer-label">👤 User Interface</span>
+    <div class="nodes-row">
+      <div class="node pulsing" id="n-dashboard" style="--node-color:#7c6aff;--node-glow:rgba(124,106,255,0.3)"
+        onclick="showInfo('dashboard')">
+        <span class="node-icon">📊</span>
+        <div class="node-title">Dashboard</div>
+        <div class="node-sub">Dashboard.tsx</div>
+        <span class="node-tag">React</span>
+      </div>
+      <div class="node" id="n-detail" style="--node-color:#7c6aff;--node-glow:rgba(124,106,255,0.3)"
+        onclick="showInfo('detail')">
+        <span class="node-icon">🔍</span>
+        <div class="node-title">Data Profiling</div>
+        <div class="node-sub">ProjectDetail.tsx</div>
+        <span class="node-tag">React</span>
+      </div>
+      <div class="node" id="n-config" style="--node-color:#7c6aff;--node-glow:rgba(124,106,255,0.3)"
+        onclick="showInfo('config')">
+        <span class="node-icon">⚙️</span>
+        <div class="node-title">Job Config</div>
+        <div class="node-sub">JobConfig.tsx</div>
+        <span class="node-tag">React</span>
+      </div>
+      <div class="node" id="n-leaderboard" style="--node-color:#7c6aff;--node-glow:rgba(124,106,255,0.3)"
+        onclick="showInfo('leaderboard')">
+        <span class="node-icon">🏆</span>
+        <div class="node-title">Leaderboard</div>
+        <div class="node-sub">Leaderboard.tsx</div>
+        <span class="node-tag">React</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connector 1 -->
+  <div class="connector-wrap">
+    <div class="connector" style="--from-color:#7c6aff;--to-color:#38bdf8;">
+      <div class="connector-arrow" style="--to-color:#38bdf8;"></div>
+    </div>
+    <span style="position:absolute;font-size:0.65rem;color:#38bdf8;background:var(--bg);padding:0 0.4rem;font-family:'JetBrains Mono',monospace;">REST API / JSON</span>
+  </div>
+
+  <!-- Layer 2: API Layer -->
+  <div class="layer">
+    <span class="layer-label">🔌 API Gateway</span>
+    <div class="nodes-row">
+      <div class="node" id="n-fastapi" style="--node-color:#38bdf8;--node-glow:rgba(56,189,248,0.3)"
+        onclick="showInfo('fastapi')">
+        <span class="node-icon">⚡</span>
+        <div class="node-title">FastAPI Server</div>
+        <div class="node-sub">uvicorn main:app</div>
+        <span class="node-tag">Python</span>
+      </div>
+      <div class="node" id="n-cors" style="--node-color:#38bdf8;--node-glow:rgba(56,189,248,0.3)"
+        onclick="showInfo('cors')">
+        <span class="node-icon">🛡️</span>
+        <div class="node-title">CORS Middleware</div>
+        <div class="node-sub">localhost:8082 ✓</div>
+        <span class="node-tag">FastAPI</span>
+      </div>
+      <div class="node" id="n-routers" style="--node-color:#38bdf8;--node-glow:rgba(56,189,248,0.3)"
+        onclick="showInfo('routers')">
+        <span class="node-icon">🗺️</span>
+        <div class="node-title">API Routers</div>
+        <div class="node-sub">projects / datasets / jobs</div>
+        <span class="node-tag">FastAPI</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connector 2 -->
+  <div style="display:flex;justify-content:center;gap:6rem">
+    <div class="connector-wrap" style="flex:1;max-width:200px">
+      <div class="connector" style="--from-color:#38bdf8;--to-color:#22c55e;">
+        <div class="connector-arrow" style="--to-color:#22c55e;"></div>
+      </div>
+      <span style="position:absolute;font-size:0.6rem;color:var(--muted);background:var(--bg);padding:0 0.4rem;font-family:'JetBrains Mono',monospace;">SQLAlchemy ORM</span>
+    </div>
+    <div class="connector-wrap" style="flex:1;max-width:200px">
+      <div class="connector" style="--from-color:#38bdf8;--to-color:#f97316;">
+        <div class="connector-arrow" style="--to-color:#f97316;"></div>
+      </div>
+      <span style="position:absolute;font-size:0.6rem;color:var(--muted);background:var(--bg);padding:0 0.4rem;font-family:'JetBrains Mono',monospace;">Task Queue</span>
+    </div>
+  </div>
+
+  <!-- Layer 3: Services -->
+  <div class="layer">
+    <span class="layer-label">⚙️ Core Services</span>
+    <div class="nodes-row">
+      <div class="node" id="n-db" style="--node-color:#22c55e;--node-glow:rgba(34,197,94,0.3)"
+        onclick="showInfo('db')">
+        <span class="node-icon">🗄️</span>
+        <div class="node-title">SQLite Database</div>
+        <div class="node-sub">dataku.db</div>
+        <span class="node-tag">SQLAlchemy</span>
+      </div>
+      <div class="node" id="n-redis" style="--node-color:#f97316;--node-glow:rgba(249,115,22,0.3)"
+        onclick="showInfo('redis')">
+        <span class="node-icon">📮</span>
+        <div class="node-title">Redis Broker</div>
+        <div class="node-sub">localhost:6379</div>
+        <span class="node-tag">Message Queue</span>
+      </div>
+      <div class="node" id="n-celery" style="--node-color:#f97316;--node-glow:rgba(249,115,22,0.3)"
+        onclick="showInfo('celery')">
+        <span class="node-icon">👷</span>
+        <div class="node-title">Celery Worker</div>
+        <div class="node-sub">train_models_task</div>
+        <span class="node-tag">Background</span>
+      </div>
+      <div class="node" id="n-storage" style="--node-color:#22c55e;--node-glow:rgba(34,197,94,0.3)"
+        onclick="showInfo('storage')">
+        <span class="node-icon">📁</span>
+        <div class="node-title">File Storage</div>
+        <div class="node-sub">/tmp/dataku_uploads</div>
+        <span class="node-tag">Filesystem</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Connector 3 -->
+  <div class="connector-wrap">
+    <div class="connector" style="--from-color:#f97316;--to-color:#ec4899;">
+      <div class="connector-arrow" style="--to-color:#ec4899;"></div>
+    </div>
+    <span style="position:absolute;font-size:0.65rem;color:#ec4899;background:var(--bg);padding:0 0.4rem;font-family:'JetBrains Mono',monospace;">Pandas + Scikit-learn</span>
+  </div>
+
+  <!-- Layer 4: ML Engine -->
+  <div class="layer">
+    <span class="layer-label">🤖 ML Engine</span>
+    <div class="nodes-row">
+      <div class="node" id="n-preprocess" style="--node-color:#ec4899;--node-glow:rgba(236,72,153,0.3)"
+        onclick="showInfo('preprocess')">
+        <span class="node-icon">🧹</span>
+        <div class="node-title">Preprocessing</div>
+        <div class="node-sub">Imputer + Encoder</div>
+        <span class="node-tag">Pandas</span>
+      </div>
+      <div class="node" id="n-rf" style="--node-color:#ec4899;--node-glow:rgba(236,72,153,0.3)"
+        onclick="showInfo('rf')">
+        <span class="node-icon">🌲</span>
+        <div class="node-title">Random Forest</div>
+        <div class="node-sub">n_estimators=100</div>
+        <span class="node-tag">Scikit-learn</span>
+      </div>
+      <div class="node" id="n-lr" style="--node-color:#ec4899;--node-glow:rgba(236,72,153,0.3)"
+        onclick="showInfo('lr')">
+        <span class="node-icon">📈</span>
+        <div class="node-title">Logistic Regression</div>
+        <div class="node-sub">max_iter=1000</div>
+        <span class="node-tag">Scikit-learn</span>
+      </div>
+      <div class="node" id="n-gb" style="--node-color:#ec4899;--node-glow:rgba(236,72,153,0.3)"
+        onclick="showInfo('gb')">
+        <span class="node-icon">🚀</span>
+        <div class="node-title">Gradient Boosting</div>
+        <div class="node-sub">n_estimators=100</div>
+        <span class="node-tag">Scikit-learn</span>
+      </div>
+    </div>
+  </div>
+
+  <p class="hint">Click any component for details • Hover to highlight</p>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#7c6aff;"></div>
+    Frontend (React)
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#38bdf8;"></div>
+    API Gateway (FastAPI)
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#22c55e;"></div>
+    Data Storage (SQLite)
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#f97316;"></div>
+    Task Queue (Celery / Redis)
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#ec4899;"></div>
+    ML Engine (Scikit-learn)
+  </div>
+</div>
+
+<!-- Info Panel -->
+<div id="info-panel">
+  <button class="close-btn" onclick="closePanel()">✕</button>
+  <div class="panel-icon" id="panel-icon">⚡</div>
+  <h3 id="panel-title">Title</h3>
+  <div class="panel-role" id="panel-role">Role</div>
+  <p id="panel-desc">Description</p>
+  <div class="tech-chips" id="panel-chips"></div>
+</div>
+
+<script>
+const nodeData = {
+  dashboard: {
+    icon: '📊', title: 'Dashboard', role: 'Frontend — Entry Point',
+    color: '#7c6aff',
+    desc: 'Halaman utama tempat user membuat project baru dan mengupload file CSV. Menggunakan UploadModal.tsx dengan drag-and-drop, kemudian memanggil POST /api/projects dan POST /api/datasets/upload.',
+    chips: ['React', 'TypeScript', 'Framer Motion', 'shadcn/ui']
+  },
+  detail: {
+    icon: '🔍', title: 'Data Profiling', role: 'Frontend — Analysis View',
+    color: '#7c6aff',
+    desc: 'Menampilkan statistik dataset yang baru diupload: jumlah baris, kolom, missing values, dan tipe fitur. Data ditarik secara nyata dari GET /api/datasets/{id}/profiling dan /preview.',
+    chips: ['React', 'Recharts', 'useEffect', 'fetch API']
+  },
+  config: {
+    icon: '⚙️', title: 'Job Config', role: 'Frontend — Configuration',
+    color: '#7c6aff',
+    desc: 'Memungkinkan user memilih kolom target untuk prediksi. Kolom diambil secara dinamis dari GET /api/projects/{id}/columns, lalu memicu POST /api/jobs/{id}/train.',
+    chips: ['React', 'useState', 'fetch API', 'Sonner Toast']
+  },
+  leaderboard: {
+    icon: '🏆', title: 'Leaderboard', role: 'Frontend — Results View',
+    color: '#7c6aff',
+    desc: 'Menampilkan ranking model berdasarkan Accuracy dan F1-Score. Menggunakan polling setiap 3 detik ke GET /api/jobs/{id}/models sehingga update otomatis saat training selesai.',
+    chips: ['React', 'Polling', 'setInterval', 'Real-time UI']
+  },
+  fastapi: {
+    icon: '⚡', title: 'FastAPI Server', role: 'Backend — Web Framework',
+    color: '#38bdf8',
+    desc: 'Entry point backend yang berjalan via Uvicorn di port 8000. Mengatur semua middleware, router, dan startup events seperti pembuatan tabel database.',
+    chips: ['FastAPI', 'Uvicorn', 'Python 3.10+', 'Hot-reload']
+  },
+  cors: {
+    icon: '🛡️', title: 'CORS Middleware', role: 'Backend — Security Layer',
+    color: '#38bdf8',
+    desc: 'Mengizinkan request dari frontend (port 8082/5173/3000) ke backend (port 8000). Dikonfigurasi dengan allow_credentials=True dan redirect_slashes=False untuk menghindari 307 redirect.',
+    chips: ['CORSMiddleware', 'redirect_slashes=False', 'localhost:8082']
+  },
+  routers: {
+    icon: '🗺️', title: 'API Routers', role: 'Backend — Routing',
+    color: '#38bdf8',
+    desc: 'Tiga modul router terpisah: projects.py (CRUD project), upload.py (upload & profiling CSV), jobs.py (trigger training dan ambil leaderboard model).',
+    chips: ['/api/projects', '/api/datasets', '/api/jobs']
+  },
+  db: {
+    icon: '🗄️', title: 'SQLite Database', role: 'Data Layer — Persistence',
+    color: '#22c55e',
+    desc: 'Menyimpan metadata: Project (id, name, status), Dataset (file_path, row_count, column_count), dan Model (algorithm_name, accuracy_score, f1_score). Diakses melalui SQLAlchemy ORM.',
+    chips: ['SQLite', 'SQLAlchemy ORM', 'dataku.db', 'Pydantic Schemas']
+  },
+  redis: {
+    icon: '📮', title: 'Redis Broker', role: 'Infrastructure — Message Queue',
+    color: '#f97316',
+    desc: 'Bertindak sebagai message broker antara FastAPI dan Celery Worker. Pesan tugas "train_models_task" dikirim ke Redis saat user mengklik "Start Auto-Training".',
+    chips: ['Redis 7.x', 'Homebrew Service', 'localhost:6379', 'Message Broker']
+  },
+  celery: {
+    icon: '👷', title: 'Celery Worker', role: 'Infrastructure — Task Executor',
+    color: '#f97316',
+    desc: 'Menjalankan proses latihan model secara asinkron di background. Setelah selesai, menyimpan skor Accuracy & F1 ke database dan mengupdate status project menjadi "completed".',
+    chips: ['Celery 5.x', 'train_models_task', 'bind=True', 'Background Process']
+  },
+  storage: {
+    icon: '📁', title: 'File Storage', role: 'Data Layer — File System',
+    color: '#22c55e',
+    desc: 'Menyimpan file CSV yang diupload user ke /tmp/dataku_uploads/ dan file model .pkl yang sudah dilatih ke /tmp/dataku_models/. Nama file disanitasi untuk keamanan.',
+    chips: ['/tmp/dataku_uploads', '/tmp/dataku_models', 'os.path.basename', 'joblib']
+  },
+  preprocess: {
+    icon: '🧹', title: 'Preprocessing', role: 'ML Engine — Data Prep',
+    color: '#ec4899',
+    desc: 'Pipeline preprocessing yang dijalankan Celery: SimpleImputer (mengisi missing values), LabelEncoder (encoding kategorikal), dan StandardScaler (normalisasi fitur numerik).',
+    chips: ['SimpleImputer', 'LabelEncoder', 'StandardScaler', 'train_test_split']
+  },
+  rf: {
+    icon: '🌲', title: 'Random Forest', role: 'ML Engine — Ensemble Model',
+    color: '#ec4899',
+    desc: 'Model ensemble berbasis Decision Tree. Melatih 100 pohon secara paralel (n_estimators=100). Umumnya memberikan hasil yang stabil untuk klasifikasi.',
+    chips: ['RandomForestClassifier', 'n_estimators=100', 'Accuracy', 'F1-Score']
+  },
+  lr: {
+    icon: '📈', title: 'Logistic Regression', role: 'ML Engine — Linear Model',
+    color: '#ec4899',
+    desc: 'Model linear klasik yang cepat dan dapat diinterpretasikan. Dijalankan dengan max_iter=1000 untuk memastikan konvergensi pada semua jenis dataset.',
+    chips: ['LogisticRegression', 'max_iter=1000', 'Baseline Model', 'Interpretable']
+  },
+  gb: {
+    icon: '🚀', title: 'Gradient Boosting', role: 'ML Engine — Boosting Model',
+    color: '#ec4899',
+    desc: 'Model boosting yang melatih decision tree secara sekuensial, setiap pohon memperbaiki error pohon sebelumnya. Sering menghasilkan akurasi tertinggi di dataset terstruktur.',
+    chips: ['GradientBoostingClassifier', 'Sequential Trees', 'High Accuracy', 'Scikit-learn']
+  }
+};
+
+function showInfo(key) {
+  const d = nodeData[key];
+  const panel = document.getElementById('info-panel');
+  document.getElementById('panel-icon').textContent = d.icon;
+  document.getElementById('panel-title').textContent = d.title;
+  document.getElementById('panel-role').textContent = d.role;
+  document.getElementById('panel-desc').textContent = d.desc;
+  panel.style.setProperty('--panel-color', d.color);
+
+  const chips = document.getElementById('panel-chips');
+  chips.innerHTML = d.chips.map(c => `<span class="tech-chip">${c}</span>`).join('');
+
+  // Highlight clicked node
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+  document.getElementById('n-' + key)?.classList.add('active');
+
+  panel.classList.add('visible');
+}
+
+function closePanel() {
+  document.getElementById('info-panel').classList.remove('visible');
+  document.querySelectorAll('.node').forEach(n => n.classList.remove('active'));
+}
+</script>
+</body>
+</html>
