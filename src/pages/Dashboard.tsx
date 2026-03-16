@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { toast } from "sonner";
 import { authHeaders, clearToken } from "@/lib/auth";
 
+// Interface untuk struktur data project dari backend
 interface Project {
   id: string;
   name: string;
@@ -18,11 +19,13 @@ interface Project {
   created_at: string;
 }
 
+// Interface tambahan untuk menyimpan statistik hasil training
 interface ProjectWithStats extends Project {
   bestAccuracy?: number;
   modelCount?: number;
 }
 
+// Konfigurasi visual berdasarkan status project
 const statusConfig = {
   idle:      { color: "text-muted-foreground", bg: "bg-muted/50",           icon: Clock,         label: "Idle" },
   profiling: { color: "text-blue-400",         bg: "bg-blue-500/10",         icon: Activity,      label: "Profiling" },
@@ -36,8 +39,9 @@ export default function Dashboard() {
   const [projects, setProjects] = useState<ProjectWithStats[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showUpload, setShowUpload] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null); // project id awaiting confirm
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
+  // Mengambil daftar project dan memperkaya data dengan akurasi terbaik jika sudah selesai
   const fetchProjects = useCallback(async () => {
     try {
       const res = await fetch(api.projects.list(), { headers: authHeaders() });
@@ -58,7 +62,7 @@ export default function Dashboard() {
                 );
                 return { ...p, bestAccuracy: best, modelCount: models.length };
               }
-            } catch { /* model data unavailable */ }
+            } catch { /* Gagal ambil data model */ }
           }
           return p;
         })
@@ -72,11 +76,12 @@ export default function Dashboard() {
     }
   }, []);
 
+  // Menghapus project dengan sistem konfirmasi ganda
   const deleteProject = async (projectId: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent navigating to ProjectDetail
+    e.stopPropagation(); 
     if (deleteConfirm !== projectId) {
       setDeleteConfirm(projectId);
-      setTimeout(() => setDeleteConfirm(null), 3000); // Auto-cancel after 3s
+      setTimeout(() => setDeleteConfirm(null), 3000); // Reset konfirmasi setelah 3 detik
       return;
     }
     try {
@@ -91,9 +96,9 @@ export default function Dashboard() {
     }
   };
 
+  // Efek untuk fetch data pertama kali dan menjalankan auto-refresh
   useEffect(() => {
     fetchProjects();
-    // Auto-refresh every 5s to pick up training status changes
     const interval = setInterval(fetchProjects, 5000);
     return () => clearInterval(interval);
   }, [fetchProjects]);
@@ -105,35 +110,24 @@ export default function Dashboard() {
     <div className="min-h-screen bg-background relative">
       <div className="fixed inset-0 bg-grid opacity-20 pointer-events-none" />
 
-      {/* Navigation */}
+      {/* Header & Navigasi Utama */}
       <nav className="relative z-10 flex items-center justify-between px-6 lg:px-12 py-5 border-b border-border max-w-[1600px] mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <Brain className="w-6 h-6 text-primary" />
           <span className="font-bold tracking-tight">DataKu</span>
         </Link>
         <div className="flex items-center gap-3">
-          <button
-            onClick={fetchProjects}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            title="Refresh projects"
-          >
+          <button onClick={fetchProjects} className="text-muted-foreground hover:text-foreground transition-colors">
             <RefreshCw className="w-4 h-4" />
           </button>
-          <button
-            onClick={() => { clearToken(); navigate("/login"); }}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            title="Sign out"
-          >
+          <button onClick={() => { clearToken(); navigate("/login"); }} className="text-muted-foreground hover:text-foreground transition-colors">
             <LogOut className="w-4 h-4" />
           </button>
-          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-            U
-          </div>
+          <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">U</div>
         </div>
       </nav>
 
       <main className="relative z-10 max-w-[1600px] mx-auto px-6 lg:px-12 py-8">
-        {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold">Projects</h1>
@@ -146,15 +140,9 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        <UploadModal
-          isOpen={showUpload}
-          onClose={() => {
-            setShowUpload(false);
-            fetchProjects(); // Refresh after upload and navigation back
-          }}
-        />
+        <UploadModal isOpen={showUpload} onClose={() => { setShowUpload(false); fetchProjects(); }} />
 
-        {/* Loading State */}
+        {/* Tampilan Loading */}
         {isLoading && (
           <div className="flex flex-col items-center justify-center h-64 gap-4">
             <Loader2 className="w-8 h-8 text-primary animate-spin" />
@@ -162,7 +150,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Empty State */}
+        {/* Tampilan jika data kosong */}
         {!isLoading && projects.length === 0 && (
           <div className="flex flex-col items-center justify-center h-64 gap-4 text-center">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
@@ -178,7 +166,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Project Grid */}
+        {/* Daftar Grid Project */}
         {!isLoading && projects.length > 0 && (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
             {projects.map((project, i) => {
@@ -194,6 +182,7 @@ export default function Dashboard() {
                   onClick={() => navigate(`/project/${project.id}`)}
                   className="glass rounded-xl p-6 hover:border-primary/30 transition-colors group cursor-pointer flex flex-col h-full"
                 >
+                  {/* Status Badge & Actions */}
                   <div className="flex items-start justify-between mb-4">
                     <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${status.bg} ${status.color}`}>
                       <StatusIcon className={`w-3 h-3 ${project.status === "training" || project.status === "profiling" ? "animate-pulse" : ""}`} />
@@ -201,18 +190,11 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-1">
                       {deleteConfirm === project.id ? (
-                        <button
-                          onClick={(e) => deleteProject(project.id, e)}
-                          className="text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full animate-pulse"
-                        >
+                        <button onClick={(e) => deleteProject(project.id, e)} className="text-xs font-semibold text-red-400 bg-red-500/10 border border-red-500/30 px-2 py-0.5 rounded-full animate-pulse">
                           Confirm?
                         </button>
                       ) : (
-                        <button
-                          onClick={(e) => deleteProject(project.id, e)}
-                          className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 p-1 rounded"
-                          title="Delete project"
-                        >
+                        <button onClick={(e) => deleteProject(project.id, e)} className="text-muted-foreground hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 p-1 rounded">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       )}
@@ -223,7 +205,7 @@ export default function Dashboard() {
                   <h3 className="font-semibold mb-1">{project.name}</h3>
                   <p className="text-xs font-mono text-muted-foreground mb-4 truncate">ID: {project.id.slice(0, 8)}...</p>
 
-                  {/* Completed: show best accuracy */}
+                  {/* Statistik jika status completed */}
                   {project.status === "completed" && (
                     <div className="border-t border-border pt-4 mt-auto">
                       <div className="flex items-center justify-between">
@@ -241,7 +223,7 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  {/* Training in progress */}
+                  {/* Indikator progress jika masih training/profiling */}
                   {(project.status === "training" || project.status === "profiling") && (
                     <div className="border-t border-border pt-4 mt-auto">
                       <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
@@ -258,7 +240,6 @@ export default function Dashboard() {
                     </div>
                   )}
 
-                  {/* Created date */}
                   <div className="text-[10px] text-muted-foreground mt-3 font-mono">
                     {formatDate(project.created_at)}
                   </div>
@@ -266,7 +247,7 @@ export default function Dashboard() {
               );
             })}
 
-            {/* Add new project card */}
+            {/* Tombol Tambah Project Baru */}
             <motion.button
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
