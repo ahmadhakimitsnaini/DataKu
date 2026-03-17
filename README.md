@@ -256,4 +256,42 @@ Dataset CSV yang diupload harus memenuhi kriteria berikut:
 
 ---
 
+## 🤝 Kontribusi
 
+Pull request sangat disambut! Untuk perubahan besar, mohon buka Issue terlebih dahulu untuk mendiskusikan perubahan yang ingin Anda buat.
+
+```bash
+git checkout -b feature/nama-fitur
+git commit -m "feat: deskripsi fitur"
+git push origin feature/nama-fitur
+```
+
+---
+
+## 📄 Lisensi
+
+Proyek ini menggunakan lisensi [MIT](LICENSE).
+
+---
+
+<p align="center">Dibuat dengan ❤️ menggunakan FastAPI + React</p>
+
+## 🤝 Kontribusi
+
+Pull request sangat disambut! Untuk perubahan besar, mohon buka Issue terlebih dahulu untuk mendiskusikan perubahan yang ingin Anda buat.
+
+```bash
+git checkout -b feature/nama-fitur
+git commit -m "feat: deskripsi fitur"
+git push origin feature/nama-fitur
+```
+
+---
+
+## 📄 Lisensi
+
+Proyek ini menggunakan lisensi [MIT](LICENSE).
+
+---
+
+<p align="center">Dibuat dengan ❤️ menggunakan FastAPI + React</p>

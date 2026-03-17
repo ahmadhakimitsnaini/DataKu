@@ -1,18 +1,59 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Brain, Play, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
-const mockColumns = ["customer_id", "age", "income", "gender", "subscription_type", "monthly_charges", "is_churned"];
+import { toast } from "sonner";
+import { api } from "@/lib/api";
+import { authHeaders } from "@/lib/auth";
 
 export default function JobConfig() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [selectedTarget, setSelectedTarget] = useState<string>("");
+  const [columns, setColumns] = useState<string[]>([]);
+  const [isStarting, setIsStarting] = useState(false);
 
-  const handleStartTraining = () => {
-    // In a real app, send API request, then redirect to leaderboard/training status
-    navigate(`/project/${id}/models`);
+  useEffect(() => {
+    // Fetch project details to get the dataset columns
+    const fetchColumns = async () => {
+      try {
+        const res = await fetch(api.projects.columns(id!), { headers: authHeaders() });
+        if (!res.ok) throw new Error("Failed to fetch project columns");
+        const data = await res.json();
+        if (data.columns) setColumns(data.columns);
+      } catch (error) {
+        console.error("Error fetching project:", error);
+        toast.error("Failed to load project details");
+      }
+    };
+    fetchColumns();
+  }, [id]);
+
+  const handleStartTraining = async () => {
+    if (!selectedTarget) return;
+    setIsStarting(true);
+    
+    try {
+      const response = await fetch(api.jobs.train(id!), {
+        method: "POST",
+        headers: authHeaders(),
+        body: JSON.stringify({ target_column: selectedTarget })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || "Failed to start training");
+      }
+
+      toast.success("Training job started successfully!");
+      navigate(`/project/${id}/models`);
+    } catch (error: unknown) {
+      console.error("Training error:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to start training job";
+      toast.error(errorMessage);
+    } finally {
+      setIsStarting(false);
+    }
   };
 
   return (
@@ -23,7 +64,7 @@ export default function JobConfig() {
       <nav className="relative z-10 flex items-center justify-between px-6 lg:px-12 py-5 border-b border-border max-w-[1600px] mx-auto">
         <Link to="/" className="flex items-center gap-2">
           <Brain className="w-6 h-6 text-primary" />
-          <span className="font-bold tracking-tight">AutoML</span>
+          <span className="font-bold tracking-tight">DataKu</span>
         </Link>
         <Link to={`/project/${id}`}>
           <Button variant="ghost">Back to Profiling</Button>
@@ -47,7 +88,7 @@ export default function JobConfig() {
           </div>
           
           <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-            {mockColumns.map((col) => (
+            {columns.map((col) => (
               <button
                 key={col}
                 onClick={() => setSelectedTarget(col)}
@@ -70,10 +111,10 @@ export default function JobConfig() {
           <Button 
             size="lg" 
             className="gap-2" 
-            disabled={!selectedTarget}
+            disabled={!selectedTarget || isStarting}
             onClick={handleStartTraining}
           >
-            <Play className="w-5 h-5" /> Start Auto-Training
+            <Play className="w-5 h-5" /> {isStarting ? "Starting..." : "Start Auto-Training"}
           </Button>
         </div>
       </main>

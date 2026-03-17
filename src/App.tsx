@@ -8,52 +8,35 @@ import Dashboard from "./pages/Dashboard";
 import ProjectDetail from "./pages/ProjectDetail";
 import JobConfig from "./pages/JobConfig";
 import Leaderboard from "./pages/Leaderboard";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 import NotFound from "./pages/NotFound";
+import { PrivateRoute } from "./components/PrivateRoute";
 
-/**
- * Inisialisasi instance QueryClient dari React Query.
- * Digunakan secara global untuk mengelola state asinkron, seperti 
- * caching data, sinkronisasi, dan background fetching dari API.
- */
 const queryClient = new QueryClient();
 
-/**
- * Komponen root (App) dari aplikasi.
- * Bertugas membungkus seluruh aplikasi dengan global provider yang dibutuhkan
- * (React Query, UI Tooltip) serta mendefinisikan sistem routing navigasi.
- *
- * @returns {JSX.Element} Elemen root aplikasi.
- */
 const App = () => (
-  // Menyediakan context React Query ke seluruh komponen anak (children)
   <QueryClientProvider client={queryClient}>
-    
-     {/* Menyediakan context global agar komponen UI Tooltip (info tambahan saat hover) dapat berfungsi */}
     <TooltipProvider>
-      
-      {/* ── Global UI Components ───────────────────────────────────────── */}
-      {/* Render komponen notifikasi (Toast/Snackbar) agar pesan pop-up
-          bisa dipanggil dari halaman manapun tanpa harus merender ulang */}
       <Toaster />
       <Sonner />
-
-      {/* ── Sistem Routing ─────────────────────────────────────────────── */}
-      {/* BrowserRouter mengatur navigasi berbasis URL browser (History API) */}
       <BrowserRouter>
         <Routes>
-          {/* Rute Halaman Utama (Landing Page) */}
+          {/* Public routes */}
           <Route path="/" element={<Index />} />
-          
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/project/:id" element={<ProjectDetail />} />
-          <Route path="/project/:id/train" element={<JobConfig />} />
-          <Route path="/project/:id/models" element={<Leaderboard />} />
-          
-          {/* Rute Wildcard (*) untuk menangani URL yang tidak terdaftar (404 Error) */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Protected routes — require JWT login */}
+          <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/project/:id" element={<PrivateRoute><ProjectDetail /></PrivateRoute>} />
+          <Route path="/project/:id/train" element={<PrivateRoute><JobConfig /></PrivateRoute>} />
+          <Route path="/project/:id/models" element={<PrivateRoute><Leaderboard /></PrivateRoute>} />
+
+          {/* 404 */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-      
     </TooltipProvider>
   </QueryClientProvider>
 );
