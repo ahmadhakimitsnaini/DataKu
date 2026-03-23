@@ -100,7 +100,7 @@ flowchart TD
 
 ---
 
-## 🛠️ Tech Stack
+## 🛠️ Technology Stack
 
 ### Frontend
 | Teknologi | Keterangan |
