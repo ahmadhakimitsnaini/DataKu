@@ -195,7 +195,7 @@ celery -A core.celery_app worker --loglevel=info
 
 ---
 
-## 🤖 Alur AutoML
+## 🤖 Roadmap AutoML
 
 ```
 Upload CSV
