@@ -250,7 +250,7 @@ Dataset CSV yang diupload harus memenuhi kriteria berikut:
 - [x] Model Leaderboard (Accuracy & F1-Score)
 - [x] Deploy model sebagai REST API
 - [x] Support dataset Excel (.xlsx)
-- [x] Hyperparameter tuning dengan Optuna
+- [] Hyperparameter tuning dengan Optuna
 - [ ] Export laporan PDF
 - [ ] Multi-user dengan autentikasi
 
@@ -276,7 +276,7 @@ Proyek ini menggunakan lisensi [MIT](LICENSE).
 
 <p align="center">Dibuat dengan ❤️ menggunakan FastAPI + React</p>
 
-## 🤝 Kontribusi
+## 🤝 Contribution
 
 Pull request sangat disambut! Untuk perubahan besar, mohon buka Issue terlebih dahulu untuk mendiskusikan perubahan yang ingin Anda buat.
 
