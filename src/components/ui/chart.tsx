@@ -1,12 +1,9 @@
 import * as React from "react";
 import * as RechartsPrimitive from "recharts";
-
 import { cn } from "@/lib/utils";
 
-// Konfigurasi selektor CSS untuk tema Light dan Dark
 const THEMES = { light: "", dark: ".dark" } as const;
 
-// Tipe data untuk konfigurasi chart (label, icon, dan warna per tema)
 export type ChartConfig = {
   [k in string]: {
     label?: React.ReactNode;
@@ -14,22 +11,17 @@ export type ChartConfig = {
   } & ({ color?: string; theme?: never } | { color?: never; theme: Record<keyof typeof THEMES, string> });
 };
 
-type ChartContextProps = {
-  config: ChartConfig;
-};
-
+type ChartContextProps = { config: ChartConfig };
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
-// Hook internal untuk mengakses konfigurasi chart di sub-komponen
+// Mengambil config chart saat ini
 function useChart() {
   const context = React.useContext(ChartContext);
-  if (!context) {
-    throw new Error("useChart must be used within a <ChartContainer />");
-  }
+  if (!context) throw new Error("useChart must be used within a <ChartContainer />");
   return context;
 }
 
-// ChartContainer: Wadah utama yang mengatur aspek rasio, tema warna, dan responsivitas
+// Wrapper utama untuk grafik (mengatur rasio dan tema)
 const ChartContainer = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div"> & {
@@ -42,16 +34,7 @@ const ChartContainer = React.forwardRef<
 
   return (
     <ChartContext.Provider value={{ config }}>
-      <div
-        data-chart={chartId}
-        ref={ref}
-        className={cn(
-          "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50",
-          className,
-        )}
-        {...props}
-      >
-        {/* Menginjeksi CSS Variables ke dalam DOM secara dinamis */}
+      <div data-chart={chartId} ref={ref} className={cn("flex aspect-video justify-center text-xs", className)} {...props}>
         <ChartStyle id={chartId} config={config} />
         <RechartsPrimitive.ResponsiveContainer>{children}</RechartsPrimitive.ResponsiveContainer>
       </div>
@@ -60,68 +43,46 @@ const ChartContainer = React.forwardRef<
 });
 ChartContainer.displayName = "Chart";
 
-// ChartStyle: Komponen helper untuk menghasilkan tag <style> berisi variabel warna --color-xxx
+// Injeksi variabel warna CSS berdasarkan tema Light/Dark
 const ChartStyle = ({ id, config }: { id: string; config: ChartConfig }) => {
   const colorConfig = Object.entries(config).filter(([_, config]) => config.theme || config.color);
-
   if (!colorConfig.length) return null;
 
   return (
     <style
       dangerouslySetInnerHTML={{
-        __html: Object.entries(THEMES)
-          .map(
-            ([theme, prefix]) => `
+        __html: Object.entries(THEMES).map(([theme, prefix]) => `
 ${prefix} [data-chart=${id}] {
-${colorConfig
-  .map(([key, itemConfig]) => {
+${colorConfig.map(([key, itemConfig]) => {
     const color = itemConfig.theme?.[theme as keyof typeof itemConfig.theme] || itemConfig.color;
     return color ? `  --color-${key}: ${color};` : null;
-  })
-  .join("\n")}
-}
-`,
-          )
-          .join("\n"),
+  }).join("\n")}
+}`).join("\n"),
       }}
     />
   );
 };
 
-// Tooltip: Komponen popup saat mouse diarahkan ke grafik
+// Popup detail data saat grafik di-hover
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
-// ChartTooltipContent: Kustomisasi konten tooltip (angka, label, dan indikator warna)
+// Isi konten dari popup tooltip
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
     React.ComponentProps<"div"> & {
-      hideLabel?: boolean;
-      hideIndicator?: boolean;
-      indicator?: "line" | "dot" | "dashed";
-      nameKey?: string;
-      labelKey?: string;
+      hideLabel?: boolean; hideIndicator?: boolean; indicator?: "line" | "dot" | "dashed";
+      nameKey?: string; labelKey?: string;
     }
->(
-  (
-    {
-      active, payload, className, indicator = "dot", hideLabel = false,
-      hideIndicator = false, label, labelFormatter, labelClassName,
-      formatter, color, nameKey, labelKey,
-    },
-    ref,
-  ) => {
+>(({ active, payload, className, indicator = "dot", hideLabel = false, hideIndicator = false, label, labelFormatter, labelClassName, formatter, color, nameKey, labelKey }, ref) => {
     const { config } = useChart();
 
-    // Logic untuk menentukan label yang muncul di atas tooltip
     const tooltipLabel = React.useMemo(() => {
       if (hideLabel || !payload?.length) return null;
       const [item] = payload;
       const key = `${labelKey || item.dataKey || item.name || "value"}`;
       const itemConfig = getPayloadConfigFromPayload(config, item, key);
-      const value = !labelKey && typeof label === "string"
-          ? config[label as keyof typeof config]?.label || label
-          : itemConfig?.label;
+      const value = !labelKey && typeof label === "string" ? config[label as keyof typeof config]?.label || label : itemConfig?.label;
 
       if (labelFormatter) return <div className={cn("font-medium", labelClassName)}>{labelFormatter(value, payload)}</div>;
       if (!value) return null;
@@ -133,7 +94,7 @@ const ChartTooltipContent = React.forwardRef<
     const nestLabel = payload.length === 1 && indicator !== "dot";
 
     return (
-      <div ref={ref} className={cn("grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl", className)}>
+      <div ref={ref} className={cn("grid min-w-[8rem] items-start gap-1.5 rounded-lg border bg-background px-2.5 py-1.5 text-xs shadow-xl", className)}>
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
           {payload.map((item, index) => {
@@ -143,13 +104,9 @@ const ChartTooltipContent = React.forwardRef<
 
             return (
               <div key={item.dataKey} className={cn("flex w-full flex-wrap items-stretch gap-2", indicator === "dot" && "items-center")}>
-                {/* Render icon jika ada, atau render indikator warna (dot/line) */}
                 {itemConfig?.icon ? <itemConfig.icon /> : !hideIndicator && (
-                  <div
-                    className={cn("shrink-0 rounded-[2px] border-[--color-border] bg-[--color-bg]", {
-                      "h-2.5 w-2.5": indicator === "dot",
-                      "w-1": indicator === "line",
-                      "w-0 border-[1.5px] border-dashed bg-transparent": indicator === "dashed",
+                  <div className={cn("shrink-0 rounded-[2px] border-[--color-border] bg-[--color-bg]", {
+                      "h-2.5 w-2.5": indicator === "dot", "w-1": indicator === "line", "w-0 border-[1.5px] border-dashed bg-transparent": indicator === "dashed",
                     })}
                     style={{ "--color-bg": indicatorColor, "--color-border": indicatorColor } as React.CSSProperties}
                   />
@@ -167,19 +124,17 @@ const ChartTooltipContent = React.forwardRef<
         </div>
       </div>
     );
-  },
+  }
 );
 ChartTooltipContent.displayName = "ChartTooltip";
 
-// Legend: Komponen keterangan warna grafik di bagian bawah/atas
+// Keterangan warna/label di bawah grafik
 const ChartLegend = RechartsPrimitive.Legend;
 
+// Isi konten dari keterangan grafik
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div"> & Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & {
-      hideIcon?: boolean;
-      nameKey?: string;
-    }
+  React.ComponentProps<"div"> & Pick<RechartsPrimitive.LegendProps, "payload" | "verticalAlign"> & { hideIcon?: boolean; nameKey?: string; }
 >(({ className, hideIcon = false, payload, verticalAlign = "bottom", nameKey }, ref) => {
   const { config } = useChart();
   if (!payload?.length) return null;
@@ -201,7 +156,7 @@ const ChartLegendContent = React.forwardRef<
 });
 ChartLegendContent.displayName = "ChartLegend";
 
-// Helper: Mencari konfigurasi label/icon dari data yang dikirim oleh Recharts
+// Fungsi pembantu untuk mencocokkan data Recharts dengan ChartConfig
 function getPayloadConfigFromPayload(config: ChartConfig, payload: unknown, key: string) {
   if (typeof payload !== "object" || payload === null) return undefined;
   const payloadPayload = "payload" in payload && typeof payload.payload === "object" && payload.payload !== null ? payload.payload : undefined;
