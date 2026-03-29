@@ -3,8 +3,10 @@ import * as TabsPrimitive from "@radix-ui/react-tabs";
 
 import { cn } from "@/lib/utils";
 
+// Tabs: Komponen pembungkus utama (root) untuk keseluruhan sistem tab
 const Tabs = TabsPrimitive.Root;
 
+// TabsList: Wadah horizontal (berwarna abu-abu redup) tempat tombol-tombol tab berjejer
 const TabsList = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.List>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.List>
@@ -20,6 +22,7 @@ const TabsList = React.forwardRef<
 ));
 TabsList.displayName = TabsPrimitive.List.displayName;
 
+// TabsTrigger: Tombol individual tab. Akan berubah warna latar belakang dan teks saat berstatus 'active'
 const TabsTrigger = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Trigger>
@@ -35,6 +38,7 @@ const TabsTrigger = React.forwardRef<
 ));
 TabsTrigger.displayName = TabsPrimitive.Trigger.displayName;
 
+// TabsContent: Area konten di bawah tab. Hanya akan muncul (render) jika tab yang bersangkutan sedang aktif
 const TabsContent = React.forwardRef<
   React.ElementRef<typeof TabsPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TabsPrimitive.Content>
