@@ -18,7 +18,9 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   const [uploadedFile, setUploadedFile] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
 
+  // Fungsi utama untuk menangani alur upload: Buat Project -> Upload File
   const processUpload = async (file: File) => {
+    // Validasi format file (hanya CSV)
     if (!file.name.endsWith(".csv")) {
       toast.error("Only CSV files are supported");
       return;
@@ -28,7 +30,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
     setIsUploading(true);
 
     try {
-      // 1. Create a new project
+      // Langkah 1: Membuat entitas project baru di database
       const projRes = await fetch(api.projects.create(), {
         method: "POST",
         headers: authHeaders(),
@@ -37,14 +39,14 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
       if (!projRes.ok) throw new Error("Failed to create project");
       const project = await projRes.json();
 
-      // 2. Upload dataset
+      // Langkah 2: Mengirim file fisik menggunakan FormData
       const formData = new FormData();
       formData.append("project_id", project.id);
       formData.append("file", file);
 
       const uploadRes = await fetch(api.datasets.upload(), {
         method: "POST",
-        headers: authFormHeaders(),
+        headers: authFormHeaders(), // Menggunakan header khusus untuk multipart/form-data
         body: formData
       });
       
@@ -54,9 +56,9 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
       }
 
       toast.success("Dataset uploaded successfully!");
-      navigate(`/project/${project.id}`);
+      navigate(`/project/${project.id}`); // Pindah ke halaman detail project setelah berhasil
       onClose();
-      // Reset state just in case it's reopened
+      
       setTimeout(() => setUploadedFile(null), 500); 
     } catch (error: unknown) {
       console.error(error);
@@ -68,6 +70,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
     }
   };
 
+  // Event handler untuk fitur Drag and Drop
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setDragOver(false);
@@ -97,6 +100,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm p-4"
           onClick={(e) => e.target === e.currentTarget && resetUpload()}
         >
+          {/* Modal Content dengan animasi Framer Motion */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -106,6 +110,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
             <h2 className="text-xl font-bold mb-1">New Project</h2>
             <p className="text-sm text-muted-foreground mb-6">Upload a CSV dataset to get started</p>
 
+            {/* Dropzone: Area drag and drop file */}
             {!uploadedFile ? (
               <div
                 onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
@@ -122,6 +127,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
                 <input id="csv-input" type="file" accept=".csv" className="hidden" onChange={handleFileSelect} />
               </div>
             ) : (
+              // Status Uploading: Muncul saat file sedang diproses
               <div className="flex items-center gap-3 bg-secondary rounded-lg p-4">
                 <FileSpreadsheet className="w-8 h-8 text-primary shrink-0 animate-pulse" />
                 <div className="flex-1 min-w-0">
