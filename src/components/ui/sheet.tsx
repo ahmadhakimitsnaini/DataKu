@@ -5,14 +5,19 @@ import * as React from "react";
 
 import { cn } from "@/lib/utils";
 
+// Root: Komponen utama pembungkus drawer
 const Sheet = SheetPrimitive.Root;
 
+// Trigger: Tombol untuk membuka drawer
 const SheetTrigger = SheetPrimitive.Trigger;
 
+// Close: Tombol untuk menutup drawer
 const SheetClose = SheetPrimitive.Close;
 
+// Portal: Memindahkan drawer ke layer DOM teratas
 const SheetPortal = SheetPrimitive.Portal;
 
+// Overlay: Latar belakang gelap saat drawer terbuka
 const SheetOverlay = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Overlay>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Overlay>
@@ -28,6 +33,7 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
+// Variasi arah munculnya drawer (atas, bawah, kiri, kanan)
 const sheetVariants = cva(
   "fixed z-50 gap-4 bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
   {
@@ -51,6 +57,7 @@ interface SheetContentProps
   extends React.ComponentPropsWithoutRef<typeof SheetPrimitive.Content>,
     VariantProps<typeof sheetVariants> {}
 
+// Content: Kontainer utama isi drawer beserta tombol close 'X'
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
   ({ side = "right", className, children, ...props }, ref) => (
     <SheetPortal>
@@ -67,16 +74,19 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
 );
 SheetContent.displayName = SheetPrimitive.Content.displayName;
 
+// Header: Bagian atas drawer untuk judul
 const SheetHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("flex flex-col space-y-2 text-center sm:text-left", className)} {...props} />
 );
 SheetHeader.displayName = "SheetHeader";
 
+// Footer: Bagian bawah drawer untuk tombol aksi
 const SheetFooter = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
   <div className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)} {...props} />
 );
 SheetFooter.displayName = "SheetFooter";
 
+// Title & Description: Label teks untuk drawer
 const SheetTitle = React.forwardRef<
   React.ElementRef<typeof SheetPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof SheetPrimitive.Title>
