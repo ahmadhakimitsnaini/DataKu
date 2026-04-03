@@ -4,16 +4,14 @@ import { Check, ChevronRight, Circle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
+// Sub-komponen dasar dari Radix UI Menubar
 const MenubarMenu = MenubarPrimitive.Menu;
-
 const MenubarGroup = MenubarPrimitive.Group;
-
 const MenubarPortal = MenubarPrimitive.Portal;
-
 const MenubarSub = MenubarPrimitive.Sub;
-
 const MenubarRadioGroup = MenubarPrimitive.RadioGroup;
 
+// Menubar: Kontainer utama horizontal untuk barisan menu
 const Menubar = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Root>
@@ -26,6 +24,7 @@ const Menubar = React.forwardRef<
 ));
 Menubar.displayName = MenubarPrimitive.Root.displayName;
 
+// MenubarTrigger: Tombol utama di menubar yang membuka dropdown (misal: "File")
 const MenubarTrigger = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Trigger>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Trigger>
@@ -41,6 +40,7 @@ const MenubarTrigger = React.forwardRef<
 ));
 MenubarTrigger.displayName = MenubarPrimitive.Trigger.displayName;
 
+// MenubarSubTrigger: Item di dalam menu yang membuka sub-menu ke arah samping
 const MenubarSubTrigger = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.SubTrigger> & {
@@ -62,6 +62,7 @@ const MenubarSubTrigger = React.forwardRef<
 ));
 MenubarSubTrigger.displayName = MenubarPrimitive.SubTrigger.displayName;
 
+// MenubarSubContent: Kontainer untuk item-item di dalam sub-menu
 const MenubarSubContent = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.SubContent>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.SubContent>
@@ -77,6 +78,7 @@ const MenubarSubContent = React.forwardRef<
 ));
 MenubarSubContent.displayName = MenubarPrimitive.SubContent.displayName;
 
+// MenubarContent: Dropdown utama yang muncul saat Trigger diklik
 const MenubarContent = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Content>
@@ -97,6 +99,7 @@ const MenubarContent = React.forwardRef<
 ));
 MenubarContent.displayName = MenubarPrimitive.Content.displayName;
 
+// MenubarItem: Item individual yang bisa diklik di dalam menu
 const MenubarItem = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Item> & {
@@ -115,6 +118,7 @@ const MenubarItem = React.forwardRef<
 ));
 MenubarItem.displayName = MenubarPrimitive.Item.displayName;
 
+// MenubarCheckboxItem: Item menu yang memiliki status centang (toggle)
 const MenubarCheckboxItem = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.CheckboxItem>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.CheckboxItem>
@@ -138,6 +142,7 @@ const MenubarCheckboxItem = React.forwardRef<
 ));
 MenubarCheckboxItem.displayName = MenubarPrimitive.CheckboxItem.displayName;
 
+// MenubarRadioItem: Item menu untuk pilihan tunggal (seperti memilih tema)
 const MenubarRadioItem = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.RadioItem>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.RadioItem>
@@ -160,6 +165,7 @@ const MenubarRadioItem = React.forwardRef<
 ));
 MenubarRadioItem.displayName = MenubarPrimitive.RadioItem.displayName;
 
+// MenubarLabel: Teks judul/label kategori di dalam menu
 const MenubarLabel = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Label>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Label> & {
@@ -174,6 +180,7 @@ const MenubarLabel = React.forwardRef<
 ));
 MenubarLabel.displayName = MenubarPrimitive.Label.displayName;
 
+// MenubarSeparator: Garis pemisah antar grup item
 const MenubarSeparator = React.forwardRef<
   React.ElementRef<typeof MenubarPrimitive.Separator>,
   React.ComponentPropsWithoutRef<typeof MenubarPrimitive.Separator>
@@ -182,6 +189,7 @@ const MenubarSeparator = React.forwardRef<
 ));
 MenubarSeparator.displayName = MenubarPrimitive.Separator.displayName;
 
+// MenubarShortcut: Teks kecil di kanan item untuk petunjuk tombol keyboard (misal: ⌘S)
 const MenubarShortcut = ({ className, ...props }: React.HTMLAttributes<HTMLSpanElement>) => {
   return <span className={cn("ml-auto text-xs tracking-widest text-muted-foreground", className)} {...props} />;
 };
