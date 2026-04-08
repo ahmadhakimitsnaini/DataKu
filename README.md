@@ -249,7 +249,7 @@ Dataset CSV yang diupload harus memenuhi kriteria berikut:
 - [x] Background Training dengan Celery
 - [x] Model Leaderboard (Accuracy & F1-Score)
 - [x] Deploy model sebagai REST API
-- [ ] Support dataset Excel (.xlsx)
+- [x] Support dataset Excel (.xlsx)
 - [ ] Hyperparameter tuning dengan Optuna
 - [ ] Export laporan PDF
 - [ ] Multi-user dengan autentikasi
@@ -270,7 +270,7 @@ git push origin feature/nama-fitur
 
 ## 📄 Lisensi
 
-Proyek ini menggunakan lisensi [MIT](LICENSE).
+Proyek ini menggunakan lisensi [MIT](LICENSE). (Not Published Yet)
 
 ---
 
