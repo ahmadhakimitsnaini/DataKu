@@ -9,10 +9,6 @@ interface NavLinkCompatProps extends Omit<NavLinkProps, "className"> {
   pendingClassName?: string; // Class saat rute dalam proses loading (transitions)
 }
 
-/**
- * NavLink: Komponen navigasi yang otomatis mendeteksi status aktif rute.
- * Sangat berguna untuk menu Sidebar agar otomatis tersorot saat diklik.
- */
 const NavLink = forwardRef<HTMLAnchorElement, NavLinkCompatProps>(
   ({ className, activeClassName, pendingClassName, to, ...props }, ref) => {
     return (
