@@ -270,7 +270,7 @@ git push origin feature/nama-fitur
 
 ## 📄 Lisensi
 
-Proyek ini menggunakan lisensi [MIT](LICENSE).
+Proyek ini menggunakan lisensi [MIT](LICENSE). (Not Published Yet)
 
 ---
 
