@@ -276,7 +276,7 @@ Proyek ini menggunakan lisensi [MIT](LICENSE). (Not Published Yet)
 
 <p align="center">Dibuat dengan ❤️ menggunakan FastAPI + React</p>
 
-## 🤝 Kontribusi
+## 🤝 Contribution
 
 Pull request sangat disambut! Untuk perubahan besar, mohon buka Issue terlebih dahulu untuk mendiskusikan perubahan yang ingin Anda buat.
 
